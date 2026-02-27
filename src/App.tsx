@@ -35,6 +35,7 @@ interface Product {
   description?: string;
   seller?: string;
   condition?: string;
+  createdAt: string;
 }
 
 // --- Mock Data ---
@@ -56,7 +57,8 @@ const PRODUCTS: Product[] = [
     type: 'buy',
     description: 'Barely used Calculus textbook by James Stewart. 8th Edition. No markings inside.',
     seller: 'David Chen',
-    condition: 'Like New'
+    condition: 'Like New',
+    createdAt: '2024-02-20T10:00:00Z'
   },
   { 
     id: 2, 
@@ -68,7 +70,8 @@ const PRODUCTS: Product[] = [
     type: 'buy',
     description: 'Oversized black hoodie, very comfortable. Size Large.',
     seller: 'Sarah Ade',
-    condition: 'Good'
+    condition: 'Good',
+    createdAt: '2024-02-21T12:00:00Z'
   },
   { 
     id: 3, 
@@ -80,7 +83,8 @@ const PRODUCTS: Product[] = [
     type: 'rent',
     description: '1.5L Electric kettle. Heats up very fast. Available for weekly rent.',
     seller: 'Michael Obi',
-    condition: 'Excellent'
+    condition: 'Excellent',
+    createdAt: '2024-02-22T09:00:00Z'
   },
   { 
     id: 4, 
@@ -92,7 +96,8 @@ const PRODUCTS: Product[] = [
     type: 'buy',
     description: 'Casio fx-991EX. Perfect for engineering students.',
     seller: 'Amina J.',
-    condition: 'New'
+    condition: 'New',
+    createdAt: '2024-02-23T15:00:00Z'
   },
   { 
     id: 5, 
@@ -104,7 +109,8 @@ const PRODUCTS: Product[] = [
     type: 'buy',
     description: 'Sony WH-1000XM4. Amazing sound quality and noise cancellation.',
     seller: 'Tunde W.',
-    condition: 'Excellent'
+    condition: 'Excellent',
+    createdAt: '2024-02-24T11:00:00Z'
   },
   { 
     id: 6, 
@@ -116,7 +122,86 @@ const PRODUCTS: Product[] = [
     type: 'rent',
     description: 'Cool vintage denim jacket. Rent for your weekend photoshoots!',
     seller: 'Blessing E.',
-    condition: 'Vintage'
+    condition: 'Vintage',
+    createdAt: '2024-02-25T14:00:00Z'
+  },
+  { 
+    id: 7, 
+    name: 'Laptop Stand', 
+    price: 4500, 
+    category: 'Electronics', 
+    hostel: 'Hall 3', 
+    image: 'https://picsum.photos/seed/stand/400/400', 
+    type: 'buy',
+    description: 'Ergonomic aluminum laptop stand. Helps with posture.',
+    seller: 'Kelechi O.',
+    condition: 'New',
+    createdAt: '2024-02-26T10:30:00Z'
+  },
+  { 
+    id: 8, 
+    name: 'White Sneakers', 
+    price: 8500, 
+    category: 'Fashion', 
+    hostel: 'Hall 2', 
+    image: 'https://picsum.photos/seed/shoes/400/400', 
+    type: 'buy',
+    description: 'Classic white sneakers, very versatile. Size 42.',
+    seller: 'Joy A.',
+    condition: 'Like New',
+    createdAt: '2024-02-26T16:45:00Z'
+  },
+  { 
+    id: 9, 
+    name: 'LED Study Lamp', 
+    price: 2000, 
+    category: 'Electronics', 
+    hostel: 'Hall 1', 
+    image: 'https://picsum.photos/seed/lamp/400/400', 
+    type: 'buy',
+    description: 'Rechargeable LED lamp with 3 brightness levels.',
+    seller: 'Samuel E.',
+    condition: 'Excellent',
+    createdAt: '2024-02-27T08:15:00Z'
+  },
+  { 
+    id: 10, 
+    name: 'Lab Coat', 
+    price: 3500, 
+    category: 'Academics', 
+    hostel: 'Hall 4', 
+    image: 'https://picsum.photos/seed/coat/400/400', 
+    type: 'buy',
+    description: 'Standard white lab coat for science students. Size Medium.',
+    seller: 'Grace P.',
+    condition: 'Good',
+    createdAt: '2024-02-27T11:20:00Z'
+  },
+  { 
+    id: 11, 
+    name: 'Mini Dorm Fridge', 
+    price: 15000, 
+    category: 'Electronics', 
+    hostel: 'Hall 2', 
+    image: 'https://picsum.photos/seed/fridge/400/400', 
+    type: 'rent',
+    description: 'Compact fridge, perfect for keeping drinks and snacks cold.',
+    seller: 'Victor M.',
+    condition: 'Good',
+    createdAt: '2024-02-27T13:00:00Z'
+  },
+  { 
+    id: 12, 
+    name: 'Yoga Mat', 
+    price: 4000, 
+    category: 'Services', 
+    hostel: 'Hall 3', 
+    image: 'https://picsum.photos/seed/yoga/400/400', 
+    type: 'buy',
+    description: 'Non-slip purple yoga mat. 6mm thickness.',
+    seller: 'Chioma R.',
+    condition: 'New',
+    createdAt: '2024-02-27T15:30:00Z'
   },
 ];
 
@@ -168,10 +253,31 @@ export default function App() {
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isVerifyOpen, setIsVerifyOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeAd, setActiveAd] = useState(0);
   const [viewType, setViewType] = useState<'buy' | 'rent'>('buy');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
+
+  // Filtering and Sorting Logic
+  const filteredProducts = PRODUCTS.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+    const matchesType = product.type === viewType;
+    return matchesSearch && matchesCategory && matchesType;
+  }).sort((a, b) => {
+    if (sortBy === 'newest') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    } else if (sortBy === 'price-low') {
+      return a.price - b.price;
+    } else if (sortBy === 'price-high') {
+      return b.price - a.price;
+    }
+    return 0;
+  });
 
   // Mock Seller Data
   const sellerStats = [
@@ -194,6 +300,12 @@ export default function App() {
   const handleLogin = () => {
     setIsLoggedIn(true);
     setIsLoginOpen(false);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setIsSellerMode(false);
+    setIsProfileOpen(false);
   };
 
   const handleVerify = () => {
@@ -247,7 +359,10 @@ export default function App() {
                   <Plus size={18} />
                   {isVerifiedSeller ? 'List Item' : 'Become a Seller'}
                 </button>
-                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm cursor-pointer hover:bg-slate-200 transition-all">
+                <div 
+                  onClick={() => setIsProfileOpen(true)}
+                  className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm cursor-pointer hover:bg-slate-200 transition-all"
+                >
                   <User size={20} className="text-slate-600" />
                 </div>
               </>
@@ -278,15 +393,22 @@ export default function App() {
             <div>
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Categories</h3>
               <nav className="space-y-1">
+                <button 
+                  onClick={() => setSelectedCategory('All')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all group ${selectedCategory === 'All' ? 'text-primary bg-primary/5' : 'text-slate-600 hover:text-primary hover:bg-primary/5'}`}
+                >
+                  <LayoutDashboard size={20} className="group-hover:scale-110 transition-transform" />
+                  <span className="font-medium">All Items</span>
+                </button>
                 {CATEGORIES.map((cat) => (
-                  <a 
+                  <button 
                     key={cat.name} 
-                    href="#" 
-                    className="flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-primary hover:bg-primary/5 rounded-xl transition-all group"
+                    onClick={() => setSelectedCategory(cat.name)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all group ${selectedCategory === cat.name ? 'text-primary bg-primary/5' : 'text-slate-600 hover:text-primary hover:bg-primary/5'}`}
                   >
                     <cat.icon size={20} className="group-hover:scale-110 transition-transform" />
                     <span className="font-medium">{cat.name}</span>
-                  </a>
+                  </button>
                 ))}
               </nav>
             </div>
@@ -447,54 +569,88 @@ export default function App() {
                 </div>
 
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                  <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">
-                    Filter
-                    <ChevronDown size={16} />
-                  </button>
-                  <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">
-                    Sort: Newest
-                    <ChevronDown size={16} />
-                  </button>
+                  <div className="relative flex-1 md:flex-none">
+                    <select 
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full md:w-auto appearance-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors outline-none cursor-pointer pr-10"
+                    >
+                      <option value="All">All Categories</option>
+                      {CATEGORIES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
+                  <div className="relative flex-1 md:flex-none">
+                    <select 
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as any)}
+                      className="w-full md:w-auto appearance-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors outline-none cursor-pointer pr-10"
+                    >
+                      <option value="newest">Sort: Newest</option>
+                      <option value="price-low">Price: Low to High</option>
+                      <option value="price-high">Price: High to Low</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
               </div>
 
               {/* Product Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {PRODUCTS.filter(p => p.type === viewType).map((product) => (
-                  <motion.div 
-                    layout
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    onClick={() => setSelectedProduct(product)}
-                    className="group bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
-                  >
-                    <div className="relative aspect-square overflow-hidden">
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="absolute top-4 right-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-primary shadow-sm">
-                        {product.category}
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => (
+                    <motion.div 
+                      layout
+                      key={product.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      onClick={() => setSelectedProduct(product)}
+                      className="group bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
+                    >
+                      <div className="relative aspect-square overflow-hidden">
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute top-4 right-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-primary shadow-sm">
+                          {product.category}
+                        </div>
                       </div>
+                      <div className="p-5">
+                        <div className="flex items-center gap-1 text-slate-400 text-xs font-medium mb-2">
+                          <MapPin size={12} />
+                          <span>📍 {product.hostel}</span>
+                        </div>
+                        <h3 className="font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">{product.name}</h3>
+                        <div className="flex items-center justify-between mt-4">
+                          <span className="text-lg font-bold text-slate-900">₦{product.price.toLocaleString()}</span>
+                          <button className="p-2 bg-slate-100 text-slate-900 rounded-xl hover:bg-primary hover:text-white transition-all">
+                            <Plus size={20} />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="col-span-full py-20 text-center">
+                    <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                      <Search size={32} />
                     </div>
-                    <div className="p-5">
-                      <div className="flex items-center gap-1 text-slate-400 text-xs font-medium mb-2">
-                        <MapPin size={12} />
-                        <span>📍 {product.hostel}</span>
-                      </div>
-                      <h3 className="font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">{product.name}</h3>
-                      <div className="flex items-center justify-between mt-4">
-                        <span className="text-lg font-bold text-slate-900">₦{product.price.toLocaleString()}</span>
-                        <button className="p-2 bg-slate-100 text-slate-900 rounded-xl hover:bg-primary hover:text-white transition-all">
-                          <Plus size={20} />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    <h3 className="text-xl font-bold text-slate-900">No items found</h3>
+                    <p className="text-slate-500">Try adjusting your search or filters to find what you're looking for.</p>
+                    <button 
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedCategory('All');
+                      }}
+                      className="mt-6 text-primary font-bold hover:underline"
+                    >
+                      Clear all filters
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -848,14 +1004,95 @@ export default function App() {
         <button className="p-2 text-primary"><ShoppingBag size={24} /></button>
         <button className="p-2 text-slate-400"><Search size={24} /></button>
         <button 
-          onClick={() => setIsVerifyOpen(true)}
+          onClick={() => isVerifiedSeller ? setIsListingFormOpen(true) : setIsVerifyOpen(true)}
           className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white"
         >
           <Plus size={24} />
         </button>
         <button className="p-2 text-slate-400"><BookOpen size={24} /></button>
-        <button className="p-2 text-slate-400"><User size={24} /></button>
+        <button 
+          onClick={() => isLoggedIn ? setIsProfileOpen(true) : setIsLoginOpen(true)}
+          className="p-2 text-slate-400"
+        >
+          <User size={24} />
+        </button>
       </div>
+
+      {/* Profile Modal */}
+      <Modal 
+        isOpen={isProfileOpen} 
+        onClose={() => setIsProfileOpen(false)} 
+        title="My Profile"
+      >
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border-2 border-primary/20 shadow-sm">
+              <User size={32} className="text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">John Doe</h3>
+              <p className="text-sm text-slate-500">080 1234 5678</p>
+              <div className="flex items-center gap-1 mt-1">
+                <div className={`w-2 h-2 rounded-full ${isVerifiedSeller ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  {isVerifiedSeller ? 'Verified Seller' : 'Buyer Account'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <button 
+              onClick={() => {
+                setIsProfileOpen(false);
+                if (isVerifiedSeller) setIsSellerMode(!isSellerMode);
+                else setIsVerifyOpen(true);
+              }}
+              className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
+                  <Store size={20} />
+                </div>
+                <span className="font-bold text-slate-700">
+                  {isVerifiedSeller ? (isSellerMode ? 'Switch to Buyer Mode' : 'Switch to Seller Mode') : 'Become a Seller'}
+                </span>
+              </div>
+              <ChevronRight size={18} className="text-slate-300" />
+            </button>
+
+            <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-all group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all">
+                  <ShoppingBag size={20} />
+                </div>
+                <span className="font-bold text-slate-700">My Orders</span>
+              </div>
+              <ChevronRight size={18} className="text-slate-300" />
+            </button>
+
+            <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-all group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-all">
+                  <MapPin size={20} />
+                </div>
+                <span className="font-bold text-slate-700">Saved Addresses</span>
+              </div>
+              <ChevronRight size={18} className="text-slate-300" />
+            </button>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 p-4 text-red-600 hover:bg-red-50 rounded-xl transition-all font-bold"
+            >
+              <LogOut size={20} />
+              Logout
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
