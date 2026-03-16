@@ -1,5 +1,5 @@
 {
   "name": "Remix: Beegee Marketplace",
-  "description": "A high-fidelity campus e-commerce marketplace for buying, renting, and listing items.",
+  "description": "A high-fidelity campus marketplace with an integrated wallet, escrow payment system, and seller withdrawals.",
   "requestFramePermissions": []
 }
