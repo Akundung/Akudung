@@ -73,6 +73,7 @@ interface Order {
   sellerId: string;
   productId: string;
   productName: string;
+  productImage?: string;
   amount: number;
   status: 'locked' | 'released' | 'cancelled';
   createdAt: any;
@@ -463,6 +464,8 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isSellerMode, setIsSellerMode] = useState(false);
+  const [isOrdersPageOpen, setIsOrdersPageOpen] = useState(false);
+  const [ordersTab, setOrdersTab] = useState<'pending' | 'history'>('pending');
   const [isListingFormOpen, setIsListingFormOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isVerifyOpen, setIsVerifyOpen] = useState(false);
@@ -476,6 +479,10 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high'>('newest');
   const [loading, setLoading] = useState(false);
+
+  const myOrders = orders.filter(o => o.buyerId === user?.uid);
+  const pendingOrders = myOrders.filter(o => o.status === 'locked');
+  const previousOrders = myOrders.filter(o => o.status === 'released');
 
   // Auth Listener
   useEffect(() => {
@@ -618,6 +625,7 @@ export default function App() {
           sellerId: selectedProduct.sellerId,
           productId: selectedProduct.id,
           productName: selectedProduct.name,
+          productImage: selectedProduct.image,
           amount: selectedProduct.price,
           status: 'locked',
           createdAt: serverTimestamp(),
@@ -844,8 +852,12 @@ export default function App() {
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Categories</h3>
               <nav className="space-y-1">
                 <button 
-                  onClick={() => setSelectedCategory('All')}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all group ${selectedCategory === 'All' ? 'text-primary bg-primary/5' : 'text-slate-600 hover:text-primary hover:bg-primary/5'}`}
+                  onClick={() => {
+                    setIsSellerMode(false);
+                    setIsOrdersPageOpen(false);
+                    setSelectedCategory('All');
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all group ${(!isSellerMode && !isOrdersPageOpen && selectedCategory === 'All') ? 'text-primary bg-primary/5' : 'text-slate-600 hover:text-primary hover:bg-primary/5'}`}
                 >
                   <LayoutDashboard size={20} className="group-hover:scale-110 transition-transform" />
                   <span className="font-medium">All Items</span>
@@ -870,10 +882,16 @@ export default function App() {
                   <MapPin size={20} />
                   <span className="font-medium">Nearby Items</span>
                 </a>
-                <a href="#" className="flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-primary rounded-xl transition-all">
+                <button 
+                  onClick={() => {
+                    setIsOrdersPageOpen(true);
+                    setIsSellerMode(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all group ${isOrdersPageOpen ? 'text-primary bg-primary/5' : 'text-slate-600 hover:text-primary hover:bg-primary/5'}`}
+                >
                   <ShoppingBag size={20} />
                   <span className="font-medium">My Orders</span>
-                </a>
+                </button>
               </nav>
             </div>
           </div>
@@ -881,7 +899,142 @@ export default function App() {
 
         {/* Main Content */}
         <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
-          {isSellerMode ? (
+          {isOrdersPageOpen ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-8"
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-900">My Orders</h1>
+                  <p className="text-slate-500">Track your purchases and release escrow funds.</p>
+                </div>
+                
+                {/* Tab Toggle */}
+                <div className="flex p-1.5 bg-slate-100 rounded-[2rem] w-full md:w-fit shadow-inner">
+                  <button 
+                    onClick={() => setOrdersTab('pending')}
+                    className={`flex-1 md:flex-none px-8 py-4 rounded-[1.5rem] font-bold text-base transition-all flex items-center justify-center gap-3 ${
+                      ordersTab === 'pending' 
+                        ? 'bg-white text-primary shadow-md scale-[1.02]' 
+                        : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                    }`}
+                  >
+                    <Clock size={22} className={ordersTab === 'pending' ? 'text-primary' : 'text-slate-400'} />
+                    <span>Pending Orders</span>
+                    {pendingOrders.length > 0 && (
+                      <span className="min-w-[24px] h-6 bg-primary text-white text-xs flex items-center justify-center rounded-full px-1.5 animate-pulse">
+                        {pendingOrders.length}
+                      </span>
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => setOrdersTab('history')}
+                    className={`flex-1 md:flex-none px-8 py-4 rounded-[1.5rem] font-bold text-base transition-all flex items-center justify-center gap-3 ${
+                      ordersTab === 'history' 
+                        ? 'bg-white text-primary shadow-md scale-[1.02]' 
+                        : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                    }`}
+                  >
+                    <ArrowRightLeft size={22} className={ordersTab === 'history' ? 'text-primary' : 'text-slate-400'} />
+                    <span>Order History</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Pending Orders */}
+              {ordersTab === 'pending' && (
+                <motion.section
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <Clock className="text-orange-500" size={24} />
+                    Pending Orders
+                  </h2>
+                  {pendingOrders.length === 0 ? (
+                    <div className="bg-slate-50 border border-dashed border-slate-200 rounded-[2rem] p-12 text-center">
+                      <ShoppingBag className="mx-auto text-slate-300 mb-4" size={48} />
+                      <p className="text-slate-500 font-medium">No pending orders. Start shopping!</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {pendingOrders.map(order => (
+                        <div key={order.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-6">
+                          <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-50 shrink-0">
+                            <img src={order.productImage || 'https://picsum.photos/seed/placeholder/200/200'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                          <div className="flex-1 text-center md:text-left">
+                            <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                              <h3 className="font-bold text-slate-900 text-lg">{order.productName}</h3>
+                              <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full uppercase tracking-wider border border-orange-100">Pending</span>
+                            </div>
+                            <p className="text-primary font-bold">₦{order.amount.toLocaleString()}</p>
+                            <p className="text-xs text-slate-400 mt-1">Order ID: {order.id}</p>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                            <button 
+                              onClick={() => {
+                                const product = products.find(p => p.id === order.productId);
+                                if (product) setSelectedProduct(product);
+                                else alert("Product details no longer available.");
+                              }}
+                              className="px-6 py-3 bg-slate-100 text-slate-900 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
+                            >
+                              View Overview
+                            </button>
+                            <button 
+                              onClick={() => handleMarkAsReceived(order)}
+                              disabled={loading}
+                              className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50"
+                            >
+                              Confirm Received
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.section>
+              )}
+
+              {/* Previous Orders */}
+              {ordersTab === 'history' && (
+                <motion.section
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <CheckCircle className="text-emerald-500" size={24} />
+                    Order History
+                  </h2>
+                  {previousOrders.length === 0 ? (
+                    <div className="bg-slate-50 border border-dashed border-slate-200 rounded-[2rem] p-12 text-center">
+                      <p className="text-slate-500 font-medium">No completed orders yet.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {previousOrders.map(order => (
+                        <div key={order.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-6 opacity-80">
+                          <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-50 shrink-0">
+                            <img src={order.productImage || 'https://picsum.photos/seed/placeholder/200/200'} className="w-full h-full object-cover grayscale" referrerPolicy="no-referrer" />
+                          </div>
+                          <div className="flex-1 text-center md:text-left">
+                            <h3 className="font-bold text-slate-900">{order.productName}</h3>
+                            <p className="text-slate-500 font-medium">₦{order.amount.toLocaleString()}</p>
+                          </div>
+                          <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold">
+                            Completed
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.section>
+              )}
+            </motion.div>
+          ) : isSellerMode ? (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
